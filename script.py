@@ -1,37 +1,42 @@
-# Simple script that tweets Pi's local IP Address
+# Simple script that texts your Raspberry Pi's IP to your phone.
 
-import tweepy
 import socket
-import datetime
+import configparser
+from twilio.rest import Client
 
-# Determine current date & time
-
-date = str(datetime.datetime.now())
-
-# Find local IPv4 Address
+# Obtain local IP Address
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.connect(("8.8.8.8", 80))
 localip = s.getsockname()[0]
 
-# Twitter personal details & methods
+# Load config.ini preferences
 
-consumer_key = "Ujc7zvjSbaJyNm8dNDH6IYtrK"
-consumer_secret = "UXFDKnQwA0ZvtxcnWtCi6Ccr6KPxN2YrCM52tymSZ3iR8xJUvM"
-access_token = "943703667420536832-9uyzndbkf41TFD67ClVBesFOOQcLqcz"
-access_token_secret = "pXyOBAb8Pc0FxzW9BGBro2LRXGFPjbDT63KgESefXdaE6"
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_token_secret)
-api = tweepy.API(auth)
+user_config = configparser.ConfigParser()
+user_config.read('config.ini')
 
-# Tweet information
+account_sid = user_config["Twilio"]['account_sid']
+auth_token = user_config["Twilio"]['auth_token']
+receiver = user_config["Twilio"]['to_number']
+sender = user_config["Twilio"]['from_number']
+message = user_config["Twilio"]['message'] + localip
 
-def tweetIP():
-    api.update_status(status="({0}) Monkey's IP: {1}".format(date, localip))
+# Prepare message request
+
+client = Client(account_sid, auth_token)
+optional = 0
+if user_config["Optional"]['use'] == "true":
+    optional = 1
+    pi_name = user_config["Optional"]['pi_name']
+
+# Finally, create text function & prepare for script run.
+
+def textIP(optional):
+    if optional == 0:
+        client.messages.create(to=receiver, from_=sender, body=message)
+    elif optional == 1:
+        client.messages.create(to=receiver, from_=sender, body="({}) ".format(pi_name) + message)
 
 if __name__ == '__main__':
-    tweetIP()
-
-# Cleaup & final actions. Close socket etc.
-
-s.close()
+    textIP(optional)
+    s.close()
