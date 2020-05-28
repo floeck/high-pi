@@ -1,4 +1,5 @@
 # Local config
+out.txt
 *.ini
 
 # Byte-compiled / optimized / DLL files
