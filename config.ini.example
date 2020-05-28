@@ -1,0 +1,10 @@
+[Twilio]
+account_sid  = somerandombits
+auth_token  = somemorerandombits
+to_number  = +46564563465
+from_number  = +37655865685
+message  = Hey! My IP is:
+
+[Optional]
+use  = true
+pi_name  = Fred
